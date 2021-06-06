@@ -278,6 +278,12 @@ class MarketoClient:
                     'get_activities_export_job_status': self.get_activities_export_job_status,
                     'get_leads_export_job_file': self.get_leads_export_job_file,
                     'get_activities_export_job_file': self.get_activities_export_job_file,
+                    'get_custom_object_export_job_file': self.get_custom_object_export_job_file,
+                    'get_custom_object_export_job_status': self.get_custom_object_export_job_status,
+                    'cancel_custom_object_export_job': self.cancel_custom_object_export_job,
+                    'enqueue_custom_object_export_job': self.enqueue_custom_object_export_job,
+                    'create_custom_object_export_job': self.create_custom_object_export_job,
+                    'get_custom_object_export_jobs_list': self.get_custom_object_export_jobs_list,
                     'get_named_accounts': self.get_named_accounts,
                     'sync_named_accounts': self.sync_named_accounts,
                     'delete_named_accounts': self.delete_named_accounts,
@@ -5152,6 +5158,7 @@ class MarketoClient:
         result = self._api_call(
             'post', self.host + '/bulk/v1/{}/export/create.json'.format(entity), args, data)
         return result['result']
+                
 
     def _export_job_state_machine(self, entity, state, job_id):
         assert entity is not None, 'Invalid argument: required field "entity" is none.'
@@ -5210,6 +5217,75 @@ class MarketoClient:
 
     def get_activities_export_jobs_list(self):
         return self._get_export_jobs_list('activities')
+
+    #--- BULK EXPORT CUSTOM OBJECT ---
+
+    def _get_export_jobs_list(self, entity, apiName):
+        self.authenticate()
+        args = {
+            'access_token': self.token
+        }
+        result = self._api_call(
+            'get', self.host + '/bulk/v1/{}/{}/export.json'.format(entity, apiName), args)
+        return result['result']
+
+    def _create_bulk_export_job(self, entity, apiName, fields=None, filters=None, format='CSV', columnHeaderNames=None):
+        assert entity is not None, 'Invalid argument: required fields is none.'
+        if entity == 'leads':
+            assert fields is not None, 'Invalid argument: required fields is none.'
+        assert filters is not None, 'Invalid argument: required filters is none.'
+        data = {'fields': fields, 'format': format, 'filter': filters}
+        if columnHeaderNames is not None:
+            data['columnHeaderNames'] = columnHeaderNames
+        self.authenticate()
+        args = {
+            'access_token': self.token
+        }
+        result = self._api_call(
+            'post', self.host + '/bulk/v1/{}/{}/export/create.json'.format(entity, apiName), args, data)
+        return result['result']
+                
+
+    def _export_job_state_machine(self, entity, state, apiName, job_id):
+        assert entity is not None, 'Invalid argument: required field "entity" is none.'
+        assert state is not None, 'Invalid argument: required field "state" is none.'
+        assert apiName is not None, 'Invalid argument: required field "apiName" is none.'
+        assert job_id is not None, 'Invalid argument: required field "job_id" is none.'        
+        state_info = {
+            'enqueue': {'suffix': '/enqueue.json', 'method': 'post', 'mode': None},
+            'cancel': {'suffix': '/cancel.json', 'method': 'post', 'mode': None},
+            'status': {'suffix': '/status.json', 'method': 'get', 'mode': None},
+            'file': {'suffix': '/file.json', 'method': 'get', 'mode': 'nojson'}
+        }
+        self.authenticate()
+        args = {
+            'access_token': self.token
+        }
+        result = self._api_call(state_info[state]['method'],
+                                self.host + '/bulk/v1/{}/{}/export/{}{}'.format(entity,apiName, job_id,
+                                                                                      state_info[state]['suffix']),
+                                args, mode=state_info[state]['mode'])
+        if state == 'file' and result.status_code == 200:
+            return result.content
+        return result['result']
+
+    def get_custom_object_export_job_file(self, *args, **kargs):
+        return self._export_job_state_machine('customobjects', 'file', *args, **kargs)
+
+    def get_custom_object_export_job_status(self, *args, **kargs):
+        return self._export_job_state_machine('customobjects', 'status', *args, **kargs)
+
+    def cancel_custom_object_export_job(self, *args, **kargs):
+        return self._export_job_state_machine('customobjects', 'cancel', *args, **kargs)
+
+    def enqueue_custom_object_export_job(self, *args, **kargs):
+        return self._export_job_state_machine('customobjects', 'enqueue', *args, **kargs)
+
+    def create_custom_object_export_job(self, *args, **kargs):
+        return self._create_bulk_export_job('customobjects', *args, **kargs)
+
+    def get_custom_object_export_jobs_list(self, *args, **kargs):
+        return self._get_export_jobs_list('customobjects', *args, **kargs)
 
     # --- NAMED ACCOUNTS ---
 
