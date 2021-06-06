@@ -5230,9 +5230,6 @@ class MarketoClient:
         return result['result']
 
     def _create_custom_object_bulk_export_job(self, entity, apiName, fields=None, filters=None, format='CSV', columnHeaderNames=None):
-        assert entity is not None, 'Invalid argument: required fields is none.'
-        assert apiName is not None, 'Invalid argument: required apiName is none'
-        assert filters is not None, 'Invalid argument: required filters is none.'
         data = {'fields': fields, 'format': format, 'filter': filters}
         if columnHeaderNames is not None:
             data['columnHeaderNames'] = columnHeaderNames
