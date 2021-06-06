@@ -23,10 +23,10 @@ Originally developed by asamat with contributions from sandipsinha and osamakhn
 '''
 
 setup(
-    name='marketorestpython',
-    version= '0.5.8',
-    url='https://github.com/jepcastelein/marketo-rest-python',
-    author='Jep Castelein',
+    name='marketorestpython-ajay',
+    version= '1.5.8',
+    url='https://github.com/Ajaymamgain/marketo-rest-python',
+    author='Ajay Mamgain',
     author_email='jep@castelein.net',
     packages=['marketorestpython', 'marketorestpython.helper'],
     license='MIT License',
