@@ -23,7 +23,7 @@ Originally developed by asamat with contributions from sandipsinha and osamakhn
 '''
 
 setup(
-    name='marketorestpython-ajay',
+    name='marketorestpython',
     version= '1.5.8',
     url='https://github.com/Ajaymamgain/marketo-rest-python',
     author='Ajay Mamgain',
